@@ -11,5 +11,5 @@
 - cli to:
   - choose user profile
   - get train times
-  - book tickets (wait and refresh until available if sold out)
-  - get tickets that are currently purchased
+  - book tickets (if sold out -> refresh/wait until available)
+  - view tickets already purchased
