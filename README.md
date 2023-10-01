@@ -6,7 +6,7 @@
 - tickets sell out often
 
 ## my solution
-- use ruby + selenium to maniuplate a browser to interact with the site
+- use python + selenium to maniuplate a browser to interact with the site
 - read user data from file
 - cli to:
   - save user data
