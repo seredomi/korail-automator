@@ -15,13 +15,10 @@ class Profile:
         self.email = email
         self.country = country
 
-# read filename, return dict of profiles
-# needs error checking
 def getProfiles() -> Profile:
-
     filename = "./user-info.csv"
     profiles = list()
-
+    # try to read from file
     try:
         with open(filename, 'r', newline='') as csvfile:
             profilereader = csv.reader(csvfile)
@@ -34,44 +31,63 @@ def getProfiles() -> Profile:
                 for j in range(len(row)): 
                     row[j] = row[j].strip()
                 profiles.append(Profile(row[0], row[1].upper(), row[2].upper(),
-                                        row[3], row[4], row[5]).upper())
-        
-        return profiles
+                                        row[3], row[4], row[5].upper()))
+    # else create new file
     except FileNotFoundError:
         with open(filename, 'w', newline='') as csvfile:
             print("no profiles in user-info.csv:")
-            print("enter new profile name: ", end="")
-            pname = input()
-            print("enter first name: ", end="")
-            fname = input()
-            while not checkName(fname):
-                print("it should only be letters, try again: ", end="")
-                fname = input()
-            print("enter last name: ", end="")
-            lname = input()
-            while not checkName(lname):
-                print("it should only be letters, try again: ", end="")
-                lname = input()
-            print("enter pin: ", end="")
-            pin = input()
-            while not checkPin(pin):
-                print("it should be 6-13 digits, try again: ", end="")
-                pin = input()
-            print("enter email: ", end="")
-            email = input()
-            while not checkEmail(email):
-                print("not a valid email, try again: ", end="")
-                email = input()
-            print("enter country code: ", end="")
-            country = input()
-            while not checkCountry(country):
-                print("it should be two capital letters, try again: ", end="")
-                country = input()
-            csvfile.write(pname + "," + fname + "," + lname + "," + pin + "," +
-                          email + "," + country + "\n")
-            profiles.append(Profile(pname, fname, lname, pin, email, country))
-            return profiles
+            newProf = newProfile()
+            profiles.append(newProf)
+            csvfile.write(newProf.pname + "," + newProf.fname + "," + newProf.lname + "," +
+                          newProf.pin + "," + newProf.email + "," + newProf.country + "\n")
 
+    return profiles
+
+
+def checkName(name: str):
+    justLetters = re.compile(r'^[a-zA-Z]+$')
+    return justLetters.match(name)
+def checkPin(pin: str):
+    sixToThirteenDigits = re.compile(r'^\d{6,13}$')
+    return sixToThirteenDigits.match(pin)
+def checkEmail(email: str):
+    validEmail = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+    return validEmail.match(email)
+def checkCountry(country: str):
+    validCountryCode = re.compile(r'^[A-Z]{2}$')
+    return validCountryCode.match(country)
+
+# dialog to create new profile
+def newProfile() -> Profile:
+    print("enter new profile name: ", end="")
+    pname = input()
+    print("enter first name: ", end="")
+    fname = input()
+    while not checkName(fname):
+        print("it should only be letters, try again: ", end="")
+        fname = input()
+    print("enter last name: ", end="")
+    lname = input()
+    while not checkName(lname):
+        print("it should only be letters, try again: ", end="")
+        lname = input()
+    print("enter pin: ", end="")
+    pin = input()
+    while not checkPin(pin):
+        print("it should be 6-13 digits, try again: ", end="")
+        pin = input()
+    print("enter email: ", end="")
+    email = input()
+    while not checkEmail(email):
+        print("not a valid email, try again: ", end="")
+        email = input()
+    print("enter country code: ", end="")
+    country = input()
+    while not checkCountry(country):
+        print("it should be two capital letters, try again: ", end="")
+        country = input()
+
+    return Profile(pname, fname, lname, pin, email, country)
 
 
 def checkProfiles(profiles: list):
@@ -96,18 +112,6 @@ def checkProfiles(profiles: list):
         if not checkCountry(profiles[i].country):
             raise ValueError("bad country code -- should be ISO 3166-1 alpha-2: " + country)
 
-def checkName(name: str):
-    justLetters = re.compile(r'^[a-zA-Z]+$')
-    return justLetters.match(name)
-def checkPin(pin: str):
-    sixToThirteenDigits = re.compile(r'^\d{6,13}$')
-    return sixToThirteenDigits.match(pin)
-def checkEmail(email: str):
-    validEmail = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
-    return validEmail.match(email)
-def checkCountry(country: str):
-    validCountryCode = re.compile(r'^[A-Z]{2}$')
-    return validCountryCode.match(country)
 
 def main():
 
