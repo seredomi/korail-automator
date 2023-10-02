@@ -1,8 +1,8 @@
 # korail-automator
 
-## korail (south korea's national train service) has an annoying interface 
+## korail has an annoying interface 
 - doesnt remember repetitive info like name, email, stations, etc
-- tickets sell out often, and when they become available, i can't enter info in quickly enough to purchase them
+- tickets sell out often, and when they become available, i get beat out by other purchasers
 
 ## my solution
 - use python + selenium to maniuplate a browser to interact with the site
