@@ -11,5 +11,4 @@
   - choose user profile
   - get train times
   - book tickets (if sold out -> refresh/wait until available and quickly purchase)
-  - view tickets already purchased
-  - refund tickets
+  - view/refund tickets already purchased
