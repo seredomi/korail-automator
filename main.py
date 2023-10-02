@@ -5,7 +5,9 @@ from selenium.webdriver.firefox.service import Service
 
 import csv
 import re
+from datetime import datetime, timezone, timedelta
 
+# PROFILE STUFF -----------------------------------------------------------------------------------
 class Profile:
     def __init__(self, pname, fname, lname, pin, email, country, isDefault=False):
         self.pname = pname
@@ -14,6 +16,12 @@ class Profile:
         self.pin = pin
         self.email = email
         self.country = country
+
+class Search:
+    def __init__(self, depStn, arrStn, depTime):
+        self.depStn = depStn
+        self.arrStn = arrStn
+        self.depTime = depTime
 
 def getProfile() -> Profile:
     filename = "./user-info.csv"
@@ -32,6 +40,7 @@ def getProfile() -> Profile:
                     row[j] = row[j].strip()
                 profiles.append(Profile(row[0], row[1].upper(), row[2].upper(),
                                         row[3], row[4], row[5].upper()))
+        if len(profiles) == 1:
             print("using profile: " + profiles[0].pname)
             return profiles[0]
         else:
@@ -55,20 +64,6 @@ def getProfile() -> Profile:
                           newProf.pin + "," + newProf.email + "," + newProf.country + "\n")
 
     return profiles
-
-
-def checkName(name: str):
-    justLetters = re.compile(r'^[a-zA-Z]+$')
-    return justLetters.match(name)
-def checkPin(pin: str):
-    sixToThirteenDigits = re.compile(r'^\d{6,13}$')
-    return sixToThirteenDigits.match(pin)
-def checkEmail(email: str):
-    validEmail = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
-    return validEmail.match(email)
-def checkCountry(country: str):
-    validCountryCode = re.compile(r'^[A-Z]{2}$')
-    return validCountryCode.match(country)
 
 # dialog to create new profile
 def newProfile() -> Profile:
@@ -102,7 +97,6 @@ def newProfile() -> Profile:
 
     return Profile(pname, fname, lname, pin, email, country)
 
-
 def checkProfiles(profiles: list):
     # error checking
     profiles.sort(key=lambda x: x.pname)
@@ -125,7 +119,74 @@ def checkProfiles(profiles: list):
         if not checkCountry(profiles[i].country):
             raise ValueError("bad country code -- should be ISO 3166-1 alpha-2: " + country)
 
+def checkName(name: str):
+    justLetters = re.compile(r'^[a-zA-Z]+$')
+    return justLetters.match(name)
+def checkPin(pin: str):
+    sixToThirteenDigits = re.compile(r'^\d{6,13}$')
+    return sixToThirteenDigits.match(pin)
+def checkEmail(email: str):
+    validEmail = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+    return validEmail.match(email)
+def checkCountry(country: str):
+    validCountryCode = re.compile(r'^[A-Z]{2}$')
+    return validCountryCode.match(country)
 
+
+
+# SEARCH STUFF -------------------------------------------------------------------------------------
+
+class Search:
+    def __init__(self, depStn, arrStn, depTime):
+        self.depStn = depStn
+        self.arrStn = arrStn
+        self.depTime = depTime
+
+def getSearch() -> Search:
+    stnShorthands = {"py": "pyeongtaek",
+                     "pyj": "pyeongtaekjije",
+                     "su": "suwon",
+                     "se": "seoul",
+                     "yo": "yongsan",
+                     "bu": "busan",
+                     "da": "daegu" }
+
+    print("where are you leaving from? ", end="")
+    depStn = input()
+    if depStn in stnShorthands:
+        depStn = stnShorthands[depStn]
+    print("where are you going? ", end="")
+    arrStn = input()
+    if arrStn in stnShorthands:
+        arrStn = stnShorthands[arrStn]
+    print("what day/time? (asap, mm/dd hh:mm) ", end="")
+    depTime = datetime(1, 1, 1)
+    while depTime.year == 1:
+        depTimeIn = input()
+        if depTimeIn == "asap":
+            depTime = datetime.now(timezone(timedelta(hours=9), 'KST'))
+        else:
+            try:
+                year = str(datetime.now().year)
+                depTime = datetime.strptime(year + depTimeIn, "%Y%m/%d %H:%M")
+            except ValueError:
+                print("bad format, try again: ", end="")
+                continue
+            # if month is in the past, add a year
+            if datetime.now().month == 12 and depTime.month < 4:
+                depTime = datetime(depTime.year+1, depTime.month, depTime.day,
+                                   depTime.hour, depTime.minute)
+            if depTime < datetime.now():
+                print("date is in the past, try again: ", end="")
+                depTime = datetime(1, 1, 1)
+            elif depTime - datetime.now() > timedelta(days=29):
+                print("can only book trains 30 days in advance, try again: ", end="")
+                depTime = datetime(1, 1, 1)
+                
+    return Search(depStn, arrStn, depTime)
+
+
+# SITE NAV STUFF -----------------------------------------------------------------------------------
 
 def main():
 
@@ -134,9 +195,29 @@ def main():
         title = driver.title
         driver.implicitly_wait(1)
 
+        # get profile
+        profile = getProfile()
 
-        # for profile in profiles:
-        #     print(profiles[profile].pname + " " + profiles[profile].fname + " " + profiles[profile].lname + " " + profiles[profile].pin + " " + profiles[profile].email + " " + profiles[profile].country)
+        print("enter:\n" + 
+              "  1 to get times\n" +
+              "  2 to book ticket\n" +
+              "  3 to view ticket\n" +
+              "  4 to cancel ticket\n" +
+              "  5 to exit")
+        choice = input()
+        while not choice.isdigit() or int(choice) < 1 or int(choice) > 5:
+            print("should be a number b/w 1 and 5, try again: ", end="")
+            choice = input()
+
+        if choice == "1":
+
+            print("searching for trains from " + depStn + " to " + arrStn +
+                  " on " + depTime.strftime("%m/%d") + " at " + depTime.strftime("%H:%M"))
+
+
+
+
+
 
         # keep window open
         while True:
