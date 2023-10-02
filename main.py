@@ -15,7 +15,7 @@ class Profile:
         self.email = email
         self.country = country
 
-def getProfiles() -> Profile:
+def getProfile() -> Profile:
     filename = "./user-info.csv"
     profiles = list()
     # try to read from file
@@ -32,6 +32,19 @@ def getProfiles() -> Profile:
                     row[j] = row[j].strip()
                 profiles.append(Profile(row[0], row[1].upper(), row[2].upper(),
                                         row[3], row[4], row[5].upper()))
+            print("using profile: " + profiles[0].pname)
+            return profiles[0]
+        else:
+            print("choose your profile. enter:")
+            for i in range(len(profiles)):
+                print("  " + str(i+1) + " for " + profiles[i].pname)
+            choice = input()
+            while not choice.isdigit() or int(choice) < 1 or int(choice) > len(profiles):
+                print("should be a number bw 1 and " + str(len(profiles)) + ", try again: ", end="")
+                choice = input()
+            return profiles[int(choice)-1]
+
+
     # else create new file
     except FileNotFoundError:
         with open(filename, 'w', newline='') as csvfile:
@@ -113,6 +126,7 @@ def checkProfiles(profiles: list):
             raise ValueError("bad country code -- should be ISO 3166-1 alpha-2: " + country)
 
 
+
 def main():
 
     with webdriver.Firefox(service=Service('/usr/bin/geckodriver')) as driver:
@@ -120,15 +134,12 @@ def main():
         title = driver.title
         driver.implicitly_wait(1)
 
-        profiles = getProfiles()
-        print("choose your profile. enter:")
-        for i in range(len(profiles)):
-            print("  " + str(i+1) + " for " + profiles[i].pname)
 
         # for profile in profiles:
         #     print(profiles[profile].pname + " " + profiles[profile].fname + " " + profiles[profile].lname + " " + profiles[profile].pin + " " + profiles[profile].email + " " + profiles[profile].country)
 
-        while(True):
+        # keep window open
+        while True:
             i = 1
 
 if __name__ == "__main__":
