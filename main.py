@@ -2,12 +2,16 @@ from selenium import webdriver
 from selenium.webdriver.firefox.service import service
 from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.firefox.options import Options
+#from selenium.webdriver.firefox.
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.wait import WebDriverWait
+# import javascript executor
+
+
 
 import csv
 import re
@@ -16,6 +20,7 @@ import time
 import sys
 import os
 from os import path
+
 
 # DIALOG STUFF ------------------------------------------------------------------------------------
 def getAction() -> int:
@@ -185,11 +190,11 @@ def getSearch() -> Search:
     arrStn = input()
     if arrStn in stnShorthands:
         arrStn = stnShorthands[arrStn]
-    print("what day/time? (asap, mm/dd hh:mm) ", end="")
+    print("what day/time? (now, hh, hh:mm, mm/dd hh:mm) ", end="")
     depTime = datetime(1, 1, 1)
     while depTime.year == 1:
         depTimeIn = input()
-        if depTimeIn == "asap":
+        if depTimeIn == "now":
             depTime = datetime.now(timezone(timedelta(hours=9), 'KST'))
         else:
             try:
@@ -254,12 +259,12 @@ def showSchedule(driver, search, profile):
             break
 
     # print train info
-    if (numTrains == 0):
+    if (len(trains) == 0):
         print("no trains found")
         return trains
     else:
-        print("next " + str(numTrains) + " trains:")
-        for i in range(numTrains):
+        print("next " + str(len(trains)) + " trains:")
+        for i in range(len(trains)):
             print("%3d. %4s %11s %5s %5s" %
                   (i+1, trains[i].number, trains[i].train_type, trains[i].dep_time, trains[i].arr_time))
 
@@ -269,80 +274,67 @@ def showSchedule(driver, search, profile):
 def selectTrain(numTrains):
     start, end = -1, -1
 
-        # select train(s) -- TODO: needs a lot of refactoring
-        print("select train (enter a number or a range): ", end="")
-        while start == -1:
-            choice = input().strip()
-            # string is '-'
-            if choice == "-":
-                start = 0; end = numTrains-1
-            # string is a number
-            elif re.search(r'^\d+$', choice):
-                choice = int(choice)
-                if choice < 1 or choice > numTrains:
-                    print("should be a number b/w 1 and " + str(numTrains) + ", try again: ", end="")
-                else:
-                    start = choice-1; end = start
-            # string is -#
-            elif re.search(r'^-\d+$', choice):
-                choice = int(choice[1:])
-                if choice < 1 or choice > numTrains:
-                    print("should be a number b/w 1 and " + str(numTrains) + ", try again: ", end="")
-                else:
-                    start = 0; end = int(choice)-1
-            # string is #-
-            elif re.search(r'^\d+-$', choice):
-                choice = int(choice[:-1])
-                if choice < 1 or choice > numTrains:
-                    print("should be a number b/w 1 and " + str(numTrains) + ", try again: ", end="")
-                else:
-                    start = choice-1; end = numTrains-1
-            # string is #-#
-            elif re.search(r'^\d+-\d+$', choice):
-                choice = choice.split("-")
-                if choice[0] > choice[1] or choice[0] < 1 or choice[1] > numTrains:
-                    print("should be a range b/w 1 and " + str(numTrains) + ", try again: ", end="")
-                else:
-                    start = int(choice[0])-1; end = int(choice[1])-1
+    # select train(s) -- TODO: needs a lot of refactoring
+    print("select train (enter a number or a range): ", end="")
+    while start == -1:
+        choice = input().strip()
+        # string is '-'
+        if choice == "-":
+            start = 0; end = numTrains-1
+        # string is a number
+        elif re.search(r'^\d+$', choice):
+            choice = int(choice)
+            if choice < 1 or choice > numTrains:
+                print("should be a number b/w 1 and " + str(numTrains) + ", try again: ", end="")
             else:
-                print("should be a number or a range, try again: ", end="")
-
-
+                start = choice-1; end = start
+        # string is -#
+        elif re.search(r'^-\d+$', choice):
+            choice = int(choice[1:])
+            if choice < 1 or choice > numTrains:
+                print("should be a number b/w 1 and " + str(numTrains) + ", try again: ", end="")
+            else:
+                start = 0; end = int(choice)-1
+        # string is #-
+        elif re.search(r'^\d+-$', choice):
+            choice = int(choice[:-1])
+            if choice < 1 or choice > numTrains:
+                print("should be a number b/w 1 and " + str(numTrains) + ", try again: ", end="")
+            else:
+                start = choice-1; end = numTrains-1
+        # string is #-#
+        elif re.search(r'^\d+-\d+$', choice):
+            choice = choice.split("-")
+            choice = [int(i) for i in choice]
+            if choice[0] > choice[1] or choice[0] < 1 or choice[1] > numTrains:
+                print("should be a range b/w 1 and " + str(numTrains) + ", try again: ", end="")
+            else:
+                start = choice[0]-1; end = choice[1]-1
+        else:
+            print("should be a number or a range, try again: ", end="")
 
     print("start: " + str(start) + ", end: " + str(end))
     return start, end
 
 
-
-
-
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-def bookTicket(driver, index, profile):
-
-    print("refreshing...")
+def refresh(driver, indices):
+    # refreshes and tries to book every option every 0.5 seconds
     while True:
-        try:
-            reserve_button = WebDriverWait(driver, 0.5).until(EC.element_to_be_clickable((By.NAME, "btnRsv1_0")))
-            break
-        except:
-            print("refreshed")
-            driver.find_element(By.XPATH, "/html/body/div[2]/div[3]/div[3]/form[1]/p/a/img").click()
+        for i in range(indices[0], indices[1]+1):
+            try:
+                print("attempting to book train " + str(i+1))
+                driver.find_element(By.NAME, "btnRsv1_" + str(i)).click()
+                return
+            except:
+                pass
+        driver.find_element(By.XPATH, "/html/body/div[2]/div[3]/div[3]/form[1]/p/a/img").click()
         
-    reserve_button.click()
-    time.sleep(0.5)
+
+
+def bookTicket(driver, profile, indices):
+
+    refresh(driver, indices)
+    time.sleep(1)
 
     # name
     driver.find_element(By.NAME, "txtCustFirstNm").send_keys(profile.fname)
@@ -356,9 +348,12 @@ def bookTicket(driver, index, profile):
     Select(driver.find_element(By.NAME, "selNationCd")).select_by_value(profile.country)
     # agree checkbox
     driver.find_element(By.XPATH, "/html/body/div[2]/div[3]/div[3]/form/div[3]/b/input").click()
-    driver.find_element(By.xpath, "/html/body/div[2]/div[3]/div[3]/form/b/p/a/img").click()
-    # driver.find_element(By.ID, "ipt_rpdi01").click()
-    # driver.find_element(By.XPATH, "//*[@id=\"contents\"]/p[2]/a").click()
+    # next button
+    driver.find_element(By.XPATH, "/html/body/div[2]/div[3]/div[3]/form/b/p/a/img").click()
+    # foreign card radio
+    driver.find_element(By.XPATH, "//*[@id=\"ipt_rdpi01\"]").click()
+    # next button
+    driver.find_element(By.XPATH, "/html/body/div[2]/div[3]/form/div/p[2]/a/img").click()
 
 
 
@@ -366,7 +361,12 @@ def bookTicket(driver, index, profile):
     print("screenshotted! :)")
 
     
+def payTicket(driver, profile):
+    # TODO: figure this shit out (elements are hidden / not open for interaction)
 
+    time.sleep(5)
+    # element = driver.find_element(By.XPATH, "//*[@id=\"all_agree\"]")
+    # driver.execute_script("document.getElementByXpath(\"//*[@id=\"all_agree\"]\")".click())
 
 def main():
 
@@ -374,18 +374,17 @@ def main():
     # os.environ['MOZ_HEADLESS'] = '1'
     with webdriver.Firefox(service=Service(executable_path='/usr/bin/geckodriver',
                                            log_output=os.path.devnull)) as driver:
-        # driver.implicitly_wait(1)
+        # driver.implicitly_wait(0.5)
 
         # get profile
         profile = getProfile()
 
-        # choice = getAction()
-        search = Search("seoul", "busan", datetime(2023, 10, 10, 0, 0))
+        choice = getAction()
+        search = getSearch()
         num_trains = showSchedule(driver, search, profile)
-        start, end = selectTrain(num_trains)
-        
-
-
+        indices = selectTrain(num_trains)
+        bookTicket(driver, profile, indices)
+        payTicket(driver, profile)
 
         # keep window open
         while True:
