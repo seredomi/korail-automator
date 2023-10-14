@@ -14,7 +14,11 @@
   - view/refund tickets already purchased
 
 ## planned tui
-main menu
+### main menu
+[k/j] move b/w options
+<br />
+[esc] return to main menu at any time
+
 - [s]earch
   - (autofill last query)
   - [k/j] move b/w queries
@@ -22,11 +26,11 @@ main menu
   - [a]rriving station
   - [h]our of departure
   - [enter] run query
-
-  - [k/j] move b/w trains
-  - [s]elect
-  - [r]ange
-  - [enter] try to book
+  - booking
+    - [k/j] move b/w trains
+    - [s]elect
+    - [r]ange
+    -  [enter] try to book
       
 - [c]heck
   - [p]rint
@@ -40,5 +44,4 @@ main menu
   - [a]dd
   - [k/j] move b/w profiles
 
-[k/j] move b/w options
-[esc] return to main menu at any time
+
